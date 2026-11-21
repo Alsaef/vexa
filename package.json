@@ -1,6 +1,6 @@
 {
-  "name": "vexa",
-  "version": "1.0.0",
+  "name": "vexa-client",
+  "version": "1.0.1",
   "description": "A tiny (< 3 kB), isomorphic, zero-dependency fetch client with built-in retries, request deduplication, AI streaming, and runtime schema validation.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -10,8 +10,7 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "default": "./dist/index.js"
+      "require": "./dist/index.cjs"
     }
   },
   "files": [
@@ -47,12 +46,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/alsaeff/vexa.git"
+    "url": "git+https://github.com/alsaef/vexa.git"
   },
   "bugs": {
-    "url": "https://github.com/alsaeff/vexa/issues"
+    "url": "https://github.com/alsaef/vexa/issues"
   },
-  "homepage": "https://github.com/alsaeff/vexa#readme",
+  "homepage": "https://github.com/alsaef/vexa#readme",
   "devDependencies": {
     "@types/node": "^22.10.1",
     "tsup": "^8.3.5",

@@ -24,6 +24,14 @@ describe('Vexa Client Core', () => {
     }
   });
 
+  it('supports both default import and named import for vexa', async () => {
+    const defaultImport = (await import('../src/index.js')).default;
+    const { vexa: namedImport } = await import('../src/index.js');
+    expect(defaultImport).toBeDefined();
+    expect(namedImport).toBeDefined();
+    expect(defaultImport).toBe(namedImport);
+  });
+
   it('performs direct call vexa(url) for GET request', async () => {
     const mockFetch = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ message: 'hello' }), {

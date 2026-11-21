@@ -2,61 +2,127 @@
 
 > **A tiny (< 3 kB), isomorphic, zero-dependency `fetch` client with built-in retries, request deduplication, AI streaming, and runtime schema validation.**
 
-[![npm version](https://img.shields.io/npm/v/vexa.svg)](https://www.npmjs.com/package/vexa)
+[![npm version](https://img.shields.io/npm/v/vexa-client.svg)](https://www.npmjs.com/package/vexa-client)
 [![license](https://img.shields.io/github/license/alsaeff/vexa)](./LICENSE)
-[![bundle size](https://img.shields.io/bundlephobia/minzip/vexa)](https://bundlephobia.com/package/vexa)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/vexa-client)](https://bundlephobia.com/package/vexa-client)
+
+---
+
+## 📌 Table of Contents
+
+- [Overview](#-overview)
+- [Installation](#-installation)
+  - [Recommended: Install as `vexa`](#option-1-recommended-install-as-vexa-so-you-can-import-from-vexa)
+  - [Direct Install: `vexa-client`](#option-2-direct-install-as-vexa-client)
+  - [Local Project Install](#option-3-local-workspace-install-without-npm)
+- [Quick Start](#-quick-start)
+- [React.js & Vite Integration Guide](#-reactjs--vite-integration-guide)
+  - [Vite Cache Tip (Fixing 504 Outdated Optimize Dep)](#vite-cache-troubleshooting-fixing-504-outdated-optimize-dep)
+  - [Centralized API Client](#1-create-a-centralized-api-client-srcapiclientjs)
+  - [Fetching Data in Components (`useEffect`)](#2-fetching-data-in-components-useeffect)
+  - [Form Submissions (POST / PUT)](#3-submitting-forms-post--put)
+  - [Solving React StrictMode Double-Fetch](#4-automatic-in-flight-deduplication-in-react)
+  - [AI Token Streaming in React](#5-ai-token-streaming-in-react)
+  - [Custom `useVexa` Hook](#6-optional-reusable-react-hook-usevexa)
+- [Core Architectural Features](#-core-architectural-features)
+  - [1. Instances & Shorthand Methods](#1-instances--shorthand-methods)
+  - [2. Path Interpolation & Query Serialization](#2-path-parameter-interpolation--clean-query-serialization)
+  - [3. Automatic Retries with Exponential Backoff & Jitter](#3-automatic-retries-with-exponential-backoff--jitter)
+  - [4. In-Flight Request Deduplication](#4-in-flight-request-deduplication)
+  - [5. First-Class AI Streaming & Server-Sent Events (SSE)](#5-first-class-ai-streaming--server-sent-events-sse)
+  - [6. Zero-Dependency Runtime Schema Validation](#6-zero-dependency-runtime-schema-validation)
+  - [7. Non-Mutating Lifecycle Hooks](#7-non-mutating-lifecycle-hooks)
+  - [8. Typed Error Hierarchy](#8-typed-error-hierarchy)
+- [Migrating from Axios to Vexa](#-migrating-from-axios-to-vexa)
+- [npm Registry Details](#-npm-registry-details)
+- [Build & Testing](#-build--testing)
+- [License](#-license)
 
 ---
 
 ## 📌 Overview
 
-**Vexa** is engineered from the ground up to modernise HTTP client workflows across modern JavaScript and TypeScript environments. Built directly on the native Web Fetch API, Vexa eliminates the overhead, legacy adapters, and mutable state typical of older libraries like Axios, while providing first-class support for AI token streaming, concurrent request deduplication, and zero-overhead runtime schema validation.
-
-> **Publishing Note:** If `vexa` is already claimed on npm, install via the scoped package `@alsaeff/vexa` or `vexa-fetch`.
-
----
-
-## ✨ Features
-
-- **🌐 Isomorphic & Universal:** Runs identically across Browsers, Node.js (18+), Bun, Deno, Cloudflare Workers, and Vercel Edge Runtime without polyfills.
-- **🪶 Zero Runtime Dependencies:** Pure TypeScript implementation with zero external production dependencies.
-- **🔁 Automatic Retries with Exponential Backoff & Jitter:** Default retries on idempotent HTTP methods and transient status codes (`408`, `429`, `500-504`), parsing HTTP `Retry-After` headers automatically.
-- **⚡ In-Flight Request Deduplication:** Prevents duplicate concurrent `GET` requests from hitting the network multiple times, safely teeing and cloning responses so each caller receives an independent body stream.
-- **🤖 Native AI & SSE Streaming:** Built-in helpers for token-by-token streaming from OpenAI, Anthropic, Gemini, Ollama, and Server-Sent Events (SSE) with `res.sse()`.
-- **📐 Standard Schema Runtime Validation:** Natively validates responses with **Standard Schema** (Zod 3.24+, Valibot, ArkType) and custom validator functions, automatically inferring typed return values.
-- **🪝 Non-Mutating Lifecycle Hooks:** Functional async hook pipelines (`beforeRequest`, `beforeRetry`, `afterResponse`, `onError`) replacing mutable interceptors.
-- **🛡️ Typed Error Hierarchy:** Discriminated `VexaError`, `VexaTimeoutError`, and `VexaValidationError` classes.
+**Vexa** is engineered from the ground up to modernize HTTP client workflows across modern JavaScript and TypeScript environments. Built directly on the native Web Fetch API, Vexa eliminates the overhead, legacy adapters, and mutable state typical of older libraries like Axios, while providing first-class support for AI token streaming, concurrent request deduplication, and zero-overhead runtime schema validation.
 
 ---
 
 ## 📦 Installation
 
+### Option 1 (Recommended): Install as `vexa` (So you can `import from 'vexa'`)
+
+npm natively supports package aliasing. This allows you to install the published `vexa-client` directly under the import name `"vexa"`:
+
 ```bash
 # npm
-npm install vexa
+npm install vexa@npm:vexa-client
 
 # pnpm
-pnpm add vexa
+pnpm add vexa@npm:vexa-client
 
 # bun
-bun add vexa
+bun add vexa@npm:vexa-client
 
 # yarn
-yarn add vexa
+yarn add vexa@npm:vexa-client
+```
+
+Now you can import directly from `'vexa'` everywhere:
+```javascript
+import { vexa } from 'vexa';
+// or:
+import vexa from 'vexa';
+```
+
+---
+
+### Option 2: Direct Install as `vexa-client`
+
+```bash
+# npm
+npm install vexa-client
+
+# pnpm
+pnpm add vexa-client
+
+# bun
+bun add vexa-client
+
+# yarn
+yarn add vexa-client
+```
+
+Import syntax:
+```javascript
+import { vexa } from 'vexa-client';
+// or:
+import vexa from 'vexa-client';
+```
+
+---
+
+### Option 3: Local Workspace Install (Without npm)
+
+If you are developing locally and want to link the repository folder directly:
+
+```bash
+npm install "/path/to/vexa"
 ```
 
 ---
 
 ## 🚀 Quick Start
 
+Both **named** and **default** imports are supported across ESM, CommonJS, TypeScript, Vite, Next.js, and Node.js:
+
 ```typescript
 import { vexa } from 'vexa';
+// or: import vexa from 'vexa';
 
-// Basic GET request
+// 1. Simple GET request
 const { data, status } = await vexa.get('https://api.example.com/users');
 console.log(status, data);
 
-// POST request with automatic JSON serialization
+// 2. POST request with automatic JSON serialization
 const created = await vexa.post('https://api.example.com/users', {
   name: 'Ada Lovelace',
   role: 'Mathematician',
@@ -66,34 +132,315 @@ console.log(created.data);
 
 ---
 
-## 📖 Core Architectural Highlights
+## ⚛️ React.js & Vite Integration Guide
 
-### 1. Creating Custom Instances
+### Vite Cache Troubleshooting: Fixing `504 (Outdated Optimize Dep)`
 
-Create isolated clients with default headers, base URLs, timeouts, and hooks:
+If you install or update dependencies while Vite's dev server is running, Vite might display:
+`504 (Outdated Optimize Dep)`
+
+**To fix in 5 seconds:**
+1. Stop your Vite terminal (`Ctrl + C`).
+2. Restart Vite with the `--force` flag:
+   ```bash
+   npm run dev -- --force
+   ```
+3. Hard-refresh your browser (`Ctrl + Shift + R` or `Cmd + Shift + R`).
+
+---
+
+### 1. Create a Centralized API Client (`src/api/client.js`)
+
+Define your client once with a `baseURL`, default headers, and token interceptor hooks:
+
+```javascript
+// src/api/client.js
+import { vexa } from 'vexa'; // or 'vexa-client'
+
+export const api = vexa.create({
+  baseURL: import.meta.env.VITE_API_URL || 'https://api.example.com',
+  timeout: 8000,
+  retry: {
+    limit: 2, // Retries failed transient requests up to 2 times
+  },
+  hooks: {
+    // Automatically attach Bearer token before every request
+    beforeRequest: [
+      (request) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+          request.headers.set('Authorization', `Bearer ${token}`);
+        }
+      },
+    ],
+    // Handle global errors (e.g. redirect on 401 Unauthorized)
+    onError: [
+      (error) => {
+        if (error.status === 401) {
+          console.warn('Session expired. Redirecting to login...');
+          // window.location.href = '/login';
+        }
+      },
+    ],
+  },
+});
+```
+
+---
+
+### 2. Fetching Data in Components (`useEffect`)
+
+```jsx
+// src/components/UserProfile.jsx
+import React, { useState, useEffect } from 'react';
+import { api } from '../api/client';
+import { VexaTimeoutError, VexaError } from 'vexa';
+
+export function UserProfile({ userId }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function fetchUser() {
+      setLoading(true);
+      setError(null);
+      try {
+        // Path parameter interpolation: /users/:id
+        const res = await api.get('/users/:id', {
+          pathParams: { id: userId },
+          signal: controller.signal,
+        });
+        setUser(res.data);
+      } catch (err) {
+        if (err.name === 'AbortError') return; // Cancelled
+        if (err instanceof VexaTimeoutError) {
+          setError('Server took too long to respond.');
+        } else if (err instanceof VexaError) {
+          setError(err.data?.message || 'Failed to fetch user profile.');
+        } else {
+          setError('An unexpected error occurred.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchUser();
+    return () => controller.abort(); // Cancel request if component unmounts
+  }, [userId]);
+
+  if (loading) return <p>Loading profile...</p>;
+  if (error) return <p style={{ color: 'red' }}>{error}</p>;
+  if (!user) return null;
+
+  return (
+    <div>
+      <h2>{user.name}</h2>
+      <p>Email: {user.email}</p>
+    </div>
+  );
+}
+```
+
+---
+
+### 3. Submitting Forms (POST / PUT)
+
+```jsx
+// src/components/CreatePost.jsx
+import React, { useState } from 'react';
+import { api } from '../api/client';
+
+export function CreatePost({ onCreated }) {
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const res = await api.post('/posts', { title, body });
+      alert(`Post created! ID: ${res.data.id}`);
+      setTitle('');
+      setBody('');
+      if (onCreated) onCreated(res.data);
+    } catch (err) {
+      alert('Error: ' + err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Post Title"
+        required
+      />
+      <textarea
+        value={body}
+        onChange={(e) => setBody(e.target.value)}
+        placeholder="Content..."
+        required
+      />
+      <button type="submit" disabled={submitting}>
+        {submitting ? 'Publishing...' : 'Publish'}
+      </button>
+    </form>
+  );
+}
+```
+
+---
+
+### 4. Automatic In-Flight Deduplication in React
+
+In React 18+ `<React.StrictMode>`, components mount twice during development. Additionally, sibling components (such as a Navbar and a Sidebar) frequently request `/api/me` at the exact same moment.
+
+Vexa **automatically deduplicates concurrent identical GET requests**:
+
+```javascript
+// Even if 3 components call this simultaneously:
+const [res1, res2, res3] = await Promise.all([
+  api.get('/api/me'),
+  api.get('/api/me'),
+  api.get('/api/me'),
+]);
+
+// Result: Only ONE HTTP request is sent over the network!
+// All 3 callers receive cloned responses without stream locks.
+```
+
+---
+
+### 5. AI Token Streaming in React
+
+Vexa has first-class native support for chunked streaming via `for await`:
+
+```jsx
+// src/components/AIChat.jsx
+import React, { useState } from 'react';
+import { vexa } from 'vexa';
+
+export function AIChat() {
+  const [prompt, setPrompt] = useState('');
+  const [output, setOutput] = useState('');
+  const [streaming, setStreaming] = useState(false);
+
+  const handleAskAI = async () => {
+    setStreaming(true);
+    setOutput('');
+
+    try {
+      const stream = await vexa.stream('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${process.env.REACT_APP_OPENAI_KEY}` },
+        data: {
+          model: 'gpt-4o',
+          stream: true,
+          messages: [{ role: 'user', content: prompt }],
+        },
+      });
+
+      // Stream text chunk-by-chunk directly into React state
+      for await (const chunk of stream) {
+        setOutput((prev) => prev + chunk);
+      }
+    } catch (err) {
+      console.error('Streaming error:', err);
+    } finally {
+      setStreaming(false);
+    }
+  };
+
+  return (
+    <div>
+      <input
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+        placeholder="Ask AI anything..."
+      />
+      <button onClick={handleAskAI} disabled={streaming}>
+        {streaming ? 'Generating...' : 'Send'}
+      </button>
+      <div style={{ whiteSpace: 'pre-wrap', marginTop: 16 }}>{output}</div>
+    </div>
+  );
+}
+```
+
+---
+
+### 6. Optional Reusable React Hook (`useVexa`)
+
+```jsx
+// src/hooks/useVexa.js
+import { useState, useEffect, useCallback } from 'react';
+import { api } from '../api/client';
+
+export function useVexa(url, config = {}) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const execute = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.get(url, config);
+      setData(res.data);
+    } catch (err) {
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [url]);
+
+  useEffect(() => {
+    execute();
+  }, [execute]);
+
+  return { data, loading, error, refetch: execute };
+}
+```
+
+Usage in any component:
+```jsx
+const { data: users, loading, error, refetch } = useVexa('/users');
+```
+
+---
+
+## 📖 Core Architectural Features
+
+### 1. Instances & Shorthand Methods
 
 ```typescript
 import { vexa } from 'vexa';
 
 const api = vexa.create({
   baseURL: 'https://api.example.com/v1',
-  headers: {
-    Authorization: 'Bearer YOUR_SECRET_KEY',
-  },
+  headers: { Authorization: 'Bearer TOKEN' },
   timeout: 5000,
-  retry: {
-    limit: 3,
-  },
 });
 
-// Inherits baseURL, headers, and retry settings
-const response = await api.get('/projects');
+// Shorthand methods:
+await api.get('/users');
+await api.post('/users', { name: 'Alice' });
+await api.put('/users/1', { name: 'Alice Smith' });
+await api.patch('/users/1', { active: true });
+await api.delete('/users/1');
+await api.head('/users');
 
-// Create hierarchical child clients
-const teamApi = api.extend({
-  headers: {
-    'X-Team-ID': 'team_123',
-  },
+// Create hierarchical child clients:
+const adminApi = api.extend({
+  headers: { 'X-Admin-Role': 'superadmin' },
 });
 ```
 
@@ -101,10 +448,8 @@ const teamApi = api.extend({
 
 ### 2. Path Parameter Interpolation & Clean Query Serialization
 
-Vexa provides expressive path templates (`:param` and `{param}`) and serializes complex query parameters, including arrays and nested objects:
-
 ```typescript
-// Path parameter interpolation
+// 1. Path parameter interpolation: /users/:id or /users/{id}
 await vexa.get('/organizations/:orgId/repositories/{repoId}', {
   pathParams: {
     orgId: 'acme-corp',
@@ -113,7 +458,7 @@ await vexa.get('/organizations/:orgId/repositories/{repoId}', {
 });
 // Dispatches: /organizations/acme-corp/repositories/infra-service
 
-// Query string serializer
+// 2. Query string serializer (supports primitives, arrays, and nested objects)
 await vexa.get('/search', {
   params: {
     query: 'compiler',
@@ -136,7 +481,7 @@ const response = await vexa.get('/analytics/reports', {
     limit: 3, // Maximum retry attempts
     methods: ['GET', 'HEAD', 'PUT', 'DELETE'], // Allowed HTTP methods
     statusCodes: [408, 429, 500, 502, 503, 504], // Status codes to retry
-    retryAfter: true, // Respect Retry-After header (seconds & HTTP dates)
+    retryAfter: true, // Respect HTTP Retry-After headers (seconds & HTTP dates)
     backoff: (attempt) => Math.min(1000 * 2 ** (attempt - 1), 10000), // Custom backoff
   },
 });
@@ -146,17 +491,16 @@ const response = await vexa.get('/analytics/reports', {
 
 ### 4. In-Flight Request Deduplication
 
-When multiple UI components or services trigger identical `GET` requests simultaneously, Vexa consolidates them into a single in-flight network operation:
+When multiple UI components trigger identical `GET` requests simultaneously, Vexa consolidates them into a single in-flight network operation:
 
 ```typescript
-// Multiple components requesting the same endpoint concurrently:
-const [userProfile, sameProfile] = await Promise.all([
+const [res1, res2] = await Promise.all([
   vexa.get('/api/me'),
   vexa.get('/api/me'),
 ]);
 
 // Result: Only 1 HTTP request hits the network!
-// Both callers receive cloned response bodies without "already read" stream lock errors.
+// Both callers receive independent cloned responses without stream locks.
 ```
 
 To opt out for specific requests:
@@ -166,38 +510,36 @@ await vexa.get('/api/status', { dedupe: false });
 
 ---
 
-### 5. AI Streaming & Server-Sent Events (SSE)
-
-Vexa provides high-level helpers for AI token streaming and SSE event streams:
+### 5. First-Class AI Streaming & Server-Sent Events (SSE)
 
 ```typescript
 import { vexa } from 'vexa';
 
-// 1. Text token streaming with async iterators
 const stream = await vexa.stream('https://api.openai.com/v1/chat/completions', {
   method: 'POST',
   headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
   data: {
     model: 'gpt-4o',
     stream: true,
-    messages: [{ role: 'user', content: 'Explain quantum computing simply.' }],
+    messages: [{ role: 'user', content: 'Explain quantum computing.' }],
   },
 });
 
+// 1. Text token streaming
 for await (const chunk of stream) {
   process.stdout.write(chunk);
 }
 
-// 2. Structured Server-Sent Events (SSE) parsing
+// 2. Server-Sent Events (SSE) structured messages
 for await (const event of stream.sse()) {
   if (event.data === '[DONE]') break;
-  const payload = event.json<{ choices: Array<{ delta: { content?: string } }> }>();
-  console.log(payload.choices[0]?.delta?.content);
+  const payload = event.json();
+  console.log(payload);
 }
 
-// 3. Line-by-line reading for NDJSON logs
+// 3. Line-by-line reading for NDJSON
 for await (const line of stream.lines()) {
-  console.log('Log line:', line);
+  console.log('Line:', line);
 }
 ```
 
@@ -205,7 +547,7 @@ for await (const line of stream.lines()) {
 
 ### 6. Zero-Dependency Runtime Schema Validation
 
-Vexa supports **Standard Schema** (`~standard.validate`), enabling direct compatibility with libraries like **Zod 3.24+**, **Valibot**, and **ArkType** without bundling them as dependencies. TypeScript return types are automatically inferred!
+Vexa supports **Standard Schema** (`~standard.validate`), enabling direct compatibility with **Zod 3.24+**, **Valibot**, and **ArkType** without bundling them as dependencies. TypeScript return types are automatically inferred!
 
 ```typescript
 import { vexa } from 'vexa';
@@ -217,48 +559,31 @@ const UserSchema = z.object({
   email: z.string().email(),
 });
 
-// res.data is automatically inferred as: { id: number; name: string; email: string }
+// res.data is automatically typed as: { id: number; name: string; email: string }
 const res = await vexa.get('/users/123', {
   schema: UserSchema,
 });
 
 console.log(res.data.name); // Type-safe!
-
-// You can also pass pure validator functions with zero external dependencies:
-const customValidator = (input: unknown) => {
-  if (typeof input !== 'object' || input === null) throw new Error('Invalid JSON');
-  return input as { status: string };
-};
-
-const result = await vexa.get('/status', { schema: customValidator });
 ```
-
-If validation fails, a typed `VexaValidationError` is thrown with detailed issue paths.
 
 ---
 
 ### 7. Non-Mutating Lifecycle Hooks
 
-Hooks replace Axios interceptors with clean, composable, async functions:
-
 ```typescript
 const client = vexa.create({
   hooks: {
-    // Modify or inspect request before dispatch
     beforeRequest: [
       async (req, config) => {
         req.headers.set('X-Request-Start', Date.now().toString());
       },
     ],
-
-    // Called prior to each retry attempt
     beforeRetry: [
       async (error, attempt) => {
-        console.warn(`Retry attempt #${attempt} following error:`, error.message);
+        console.warn(`Retry attempt #${attempt} after error:`, error.message);
       },
     ],
-
-    // Transform response data
     afterResponse: [
       async (response, data, config) => {
         if (typeof data === 'object' && data !== null) {
@@ -267,8 +592,6 @@ const client = vexa.create({
         return data;
       },
     ],
-
-    // Global error listener
     onError: [
       async (error) => {
         console.error(`[${error.name}] Request failed: ${error.request.url}`);
@@ -352,16 +675,23 @@ console.log(data);
 
 ---
 
-## 🛠️ Build & Verification
+## 📦 npm Registry Details
+
+* **Live Registry Package:** [`vexa-client`](https://www.npmjs.com/package/vexa-client) (Version `1.0.0`)
+* **Why `vexa-client`?** The root name `vexa` on npm was registered in 2022 by another user as an empty placeholder. By installing via `npm install vexa@npm:vexa-client`, npm places it under `node_modules/vexa`, allowing you to write `import { vexa } from 'vexa'` without waiting for an npm name dispute transfer!
+
+---
+
+## 🛠️ Build & Testing
 
 ```bash
-# Typecheck
+# Typecheck TypeScript source (strict: true)
 npm run typecheck
 
-# Run test suite
+# Run complete Vitest suite (37 tests)
 npm run test
 
-# Build dual ESM + CJS bundles
+# Build dual ESM + CJS bundles with DTS
 npm run build
 ```
 
