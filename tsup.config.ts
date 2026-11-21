@@ -7,9 +7,9 @@ export default defineConfig({
   clean: true,
   minify: true,
   sourcemap: true,
-  treeshake: true,
   splitting: false,
   target: 'es2022',
+  cjsInterop: true,
   outExtension({ format }) {
     return {
       js: format === 'cjs' ? '.cjs' : '.js',
