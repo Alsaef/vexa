@@ -677,7 +677,7 @@ console.log(data);
 
 ## 📦 npm Registry Details
 
-* **Live Registry Package:** [`vexa-client`](https://www.npmjs.com/package/vexa-client) (Version `1.0.0`)
+* **Live Registry Package:** [`vexa-client`](https://www.npmjs.com/package/vexa-client) (Version `1.0.1`)
 * **Why `vexa-client`?** The root name `vexa` on npm was registered in 2022 by another user as an empty placeholder. By installing via `npm install vexa@npm:vexa-client`, npm places it under `node_modules/vexa`, allowing you to write `import { vexa } from 'vexa'` without waiting for an npm name dispute transfer!
 
 ---
